@@ -1,0 +1,10 @@
+Var z = 100;
+Def circle (x, y)
+	FillCircle(x, y, z, #000000);
+End;
+Def rect (x)
+	FillRect(x, 100, 100, 100, #212121);
+	Do circle(400, 200);
+End;
+z = 10;
+Do rect(200);

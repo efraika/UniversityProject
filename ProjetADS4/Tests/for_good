@@ -1,0 +1,4 @@
+Var x = 12;
+For (i, x, (2 * x), 1)
+	DrawCircle((i * 10), x, 5, #000000);
+End;

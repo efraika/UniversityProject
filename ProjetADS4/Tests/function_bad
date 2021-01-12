@@ -1,0 +1,7 @@
+Def circle (x, y)
+	FillCircle(x, y, z, #000000);
+End;
+Def circle (x, y)
+	DrawCircle(x, y, z, #000000);
+End;
+Do circle(400);

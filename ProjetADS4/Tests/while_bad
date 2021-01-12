@@ -1,0 +1,3 @@
+While (8/2) do
+  	DrawCircle((2 * 10), x, 5, #000000);
+End;  

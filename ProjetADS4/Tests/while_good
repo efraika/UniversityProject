@@ -1,0 +1,7 @@
+Var g = 64;
+
+While 2 Do
+    FillRect(280, 100, 50, 120, #FFFF00);
+    DrawCircle((2*g),g,30,#FF0000);
+    g = (g/2);
+End;

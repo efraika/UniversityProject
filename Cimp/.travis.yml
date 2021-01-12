@@ -1,0 +1,65 @@
+language: C
+dist: xenial
+
+stages:
+  - Base
+  - Lint
+  - Test
+
+matrix:
+  include:
+    - name: verifying travis.yml file
+      stage: Base
+      script:
+        - python3 .travis_gen.py > expected.out
+        - diff .travis.yml expected.out
+    - name: test project compile
+      stage: Base
+      before_install: sudo apt-get update
+      install: sudo apt-get install -y --no-install-recommends libsdl2-dev libsdl2-image-dev
+      script:
+        - make
+    - name: all C files in Makefile
+      stage: Base
+      script:
+        - diff <(make print-SRC | tr ' ' '\n' | sort) <(find src -name "*.c" | sort)
+    - name: all headers files in Makefile
+      stage: Base
+      script:
+        - diff <(make print-INC | tr ' ' '\n' | sort) <(find inc -name "*.h" | sort)
+    - name: uncrustify
+      stage: Lint
+      script:
+        - make uncrustify_check
+    - name: cpplint
+      stage: Lint
+      before_install: sudo apt-get update
+      install: sudo apt-get install -y --no-install-recommends python3-venv
+      script:
+        - make cpplint_run
+    - name: cppcheck
+      stage: Lint
+      before_install: sudo apt-get update
+      install: sudo apt-get install -y --no-install-recommends cppcheck
+      script:
+        - make cppcheck_run
+    - name: clang-tidy
+      stage: Lint
+      before_install: sudo apt-get update
+      install: sudo apt-get install -y --no-install-recommends clang-tidy-6.0 clang-6.0 libsdl2-dev libsdl2-image-dev
+      script:
+        - make clang_tidy_run
+    - name: infer
+      stage: Lint
+      before_install: sudo apt-get update
+      install: sudo apt-get install -y --no-install-recommends libsdl2-dev libsdl2-image-dev
+      script:
+        - sudo make /usr/local/bin/infer
+        - make infer_run
+    - name: libcheck
+      stage: Test
+      before_install: sudo apt-get update
+      install: sudo apt-get install -y --no-install-recommends python3-venv check libsdl2-dev libsdl2-image-dev
+      script:
+        - make images
+        - make cimp_check

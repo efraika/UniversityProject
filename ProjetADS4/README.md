@@ -1,6 +1,6 @@
 # Projet d'ADS4
 
-Ce projet a été réalisé  par Marie Bétend ([efraika](https://github.com/efraika)) et ([CTPaul](https://github.com/CTPaul)), dans le cadre de notre enseignement d'Analyse de Données Structurées.
+Ce projet a été réalisé  par Marie Bétend ([efraika](https://github.com/efraika)) et anonyme, dans le cadre de notre enseignement d'Analyse de Données Structurées.
 Le répertoir initial de ce projet peut être trouvé [ici](https://github.com/efraika/ProjetADS4).
 
 Dans ce répertoire, vous trouverez tous les fichiers nécessaires à l'interprétation du langage ci dessous, permettant de tracer des formes géométriques simples.

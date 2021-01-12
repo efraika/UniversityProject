@@ -25,6 +25,7 @@ Diversi projetti realizatti come parte dei miei studi.
  
  * M1 : 
     * [Emag](https://github.com/efraika/UniversityProject/tree/main/Emag) - C++ with [maiste](https://github.com/maiste)
+    * [TechBigData](https://github.com/efraika/UniversityProject/tree/main/TechBigData) - Jupyter Notebooks with [firgaty](https://github.com/firgaty) 
  
  * M2 :
     * [e-scaladur](https://github.com/efraika/UniversityProject/tree/main/e-scaladur) - Scala with [firgaty](https://github.com/firgaty), [vch9](https://github.com/vch9), [Shtrow](https://github.com/Shtrow) and [maiste](https://github.com/maiste)

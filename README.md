@@ -22,5 +22,6 @@ Diversi projetti realizatti come parte dei miei studi.
  * L3 :
  
  * M1 :
+  * [Emag](https://github.com/efraika/UniversityProject/tree/main/Emag) - C++ with [maiste](https://github.com/maiste)
  
  * M2 :

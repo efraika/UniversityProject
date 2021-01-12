@@ -1,6 +1,6 @@
 # POCA 2020
 
-Realised with [firgaty](https://github.com/firgaty), [vch9](https://github.com/vch9), [Shtrow](https://github.com/Shtrow) and [maiste](https://github.com/maiste)
+Realised by ([efraika](https://github.com/efraika)), [firgaty](https://github.com/firgaty), [vch9](https://github.com/vch9), [Shtrow](https://github.com/Shtrow) and [maiste](https://github.com/maiste)
 Original repository can be found [here](https://gaufre.informatique.univ-paris-diderot.fr/e-scaladur/poca-2020).
 
 [![pipeline status](https://gaufre.informatique.univ-paris-diderot.fr/e-scaladur/poca-2020/badges/master/pipeline.svg?style=flat-square)](https://gaufre.informatique.univ-paris-diderot.fr/e-scaladur/poca-2020/commits/master)

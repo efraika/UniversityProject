@@ -1,0 +1,76 @@
+package projet;
+
+import static org.bytedeco.javacpp.opencv_core.CV_8UC1;
+import static org.bytedeco.javacpp.opencv_core.extractChannel;
+import static org.bytedeco.javacpp.opencv_imgcodecs.IMREAD_UNCHANGED;
+import static org.bytedeco.javacpp.opencv_imgcodecs.imread;
+
+import java.util.LinkedList;
+import java.util.Random;
+
+import org.bytedeco.javacpp.opencv_core.Mat;
+import org.bytedeco.javacpp.opencv_core.Rect;
+
+public class Round extends Showable{
+	private int number;
+	private LinkedList<Ninja> liste = new LinkedList<Ninja>();
+	private Mat[] digitImages;
+	private final Mat image;
+	
+	public Round(int number, Webcam webcam, Chest coffre) {
+		super(webcam);
+		image = imread("Images/round.png", IMREAD_UNCHANGED);
+		this.number = number;
+		liste.add(new Ninja(webcam,1,coffre,(this.number/3)+1));
+		digitImages = new Mat[10];
+		for (int i = 0; i < 10; i++)
+			digitImages[i] = imread("Images/number" + i + ".png", IMREAD_UNCHANGED);
+		setSize(image.cols() * webcam.height / 720, image.rows() * webcam.height / 720);
+		setLocation((webcam.width - width) / 2, 40);
+	}
+	
+	public 	LinkedList<Ninja> getListe(){
+		return liste;
+	}
+	
+	/**
+	 * Ajoute des ninjas � liste.
+	 * @param w
+	 * @param coffre
+	 */
+	public void addNinjas(Webcam w, Chest coffre) {
+		for(int i=0; i<=number;i++) {
+			int decade = (number/10);
+			int n = new Random().nextInt(decade+1)+1;
+			liste.add(new Ninja(w,n,coffre,(this.number/5)+1));
+		}
+	}
+	
+	/**
+	 * Incremente le numero du round de 1.
+	 */
+	public void nextRound() {
+		number++;
+	}
+	
+	public Mat getImage() {
+		Mat copy = image.clone();
+		for(int i = 0; i < 2; i++) {
+			//the i-th digit of "coins" counting from the right
+			Mat digit = digitImages[number / (int)Math.pow(10, i) % 10];
+			Mat alpha = new Mat(digit.size(), CV_8UC1);
+			extractChannel(digit, alpha, 3);
+			digit.copyTo(copy.apply(new Rect(image.cols()/3+70-i*25, 65, digit.cols(), digit.rows())), alpha);
+		}
+		return copy;
+	}
+	
+	/**
+	 * Renvoie le numero du round courant.
+	 * @return
+	 */
+	public int getRound() {
+		return number;
+	}
+	
+}

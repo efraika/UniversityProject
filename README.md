@@ -19,11 +19,13 @@ Diversi projetti realizatti come parte dei miei studi.
  
  * L2 : 
     * [ProjetADS4](https://github.com/efraika/UniversityProject/tree/main/ProjetADS4) - JAVA with anonym
+    * [Ninjas](https://github.com/efraika/UniversityProject/tree/main/ProjetADS4) - JAVA with Jimmy HO, Maxime VEMCLEFS et Loriane LECLERCQ
+    * [Les frises de Coxeter]() - Maths study
  
  * L3 :
     * [Cimp](https://github.com/efraika/UniversityProject/tree/main/Cimp) - C with [FauconFan](https://github.com/FauconFan) and [ugosalin](https://github.com/ugosalin)
     * [Mondrian](https://github.com/efraika/UniversityProject/tree/main/Mondrian) - Ocaml with anonym
- 
+    * [Modele SIR]() - Maths study with Flore Caye 
  * M1 : 
     * [Emag](https://github.com/efraika/UniversityProject/tree/main/Emag) - C++ with [maiste](https://github.com/maiste)
     * [TechBigData](https://github.com/efraika/UniversityProject/tree/main/TechBigData) - Jupyter Notebooks with [firgaty](https://github.com/firgaty) 

@@ -1,0 +1,91 @@
+package projet;
+
+import static org.bytedeco.javacpp.opencv_core.CV_8UC1;
+import static org.bytedeco.javacpp.opencv_core.extractChannel;
+import static org.bytedeco.javacpp.opencv_imgcodecs.IMREAD_UNCHANGED;
+import static org.bytedeco.javacpp.opencv_imgcodecs.imread;
+import static org.bytedeco.javacpp.opencv_imgproc.circle;
+import static org.bytedeco.javacpp.opencv_imgproc.ellipse;
+import static org.bytedeco.javacpp.opencv_imgproc.CV_AA;
+
+import org.bytedeco.javacpp.opencv_core.Mat;
+import org.bytedeco.javacpp.opencv_core.Point;
+import org.bytedeco.javacpp.opencv_core.Scalar;
+import org.bytedeco.javacpp.opencv_core.Size;
+import org.bytedeco.javacpp.opencv_imgproc;
+
+/**
+ * A press and hold virtual button.
+ */
+public class Button extends Showable {
+	private int timer;
+	private final int maxTime;
+	private final Mat image;
+	private final static Mat emptyButton = imread("Images/Buttons/empty.png", IMREAD_UNCHANGED);
+	public final static Mat PAUSE = imread("Images/Buttons/pause.png", IMREAD_UNCHANGED),
+			LIGHTNING = imread("Images/Buttons/explosion.png", IMREAD_UNCHANGED);
+	
+	public Button(Webcam w, int x, int y, int width, int height, Mat img, String text, int time) {
+		super(w, x, y, width, height);
+		if (img == null || img.empty()) {
+			image = emptyButton;
+			addText(text);
+		}
+		else
+			image = img;
+		timer = maxTime = time;
+	}
+	
+	public Button(Webcam w, int x, int y, int width, int height, Mat img, String text) {
+		this(w, x, y, width, height, img, text, 36);
+	}
+	
+	public Mat getImage() {
+		if (timer == maxTime)
+			return image;
+		else {
+			Mat img = image.clone();
+			Point center = new Point(image.cols()/2, image.rows()/2);
+			int radius = image.rows() / 3;
+			circle(img, center, radius, Scalar.all(150), radius/3, CV_AA, 0);
+			ellipse(img, center, new Size(radius, radius), -90, 0, (maxTime - timer) * 360 / maxTime, Scalar.all(255), radius/6, CV_AA, 0);
+			return img;
+		}
+	}
+	
+	/**
+	 * Returns whether the button timer is over.
+	 * @return true if the button timer is over; false otherwise.
+	 */
+	public boolean isOver() {
+		return timer == 0;
+	}
+	
+	/**
+	 * Decreases the button timer. Meant to be called while the button is being held.
+	 */
+	public void decrease() {
+		if (timer > 0) timer--;
+	}
+	
+	/**
+	 * Resets the button timer. Meant to be called when the button is released.
+	 */
+	public void reset() {
+		timer = maxTime;
+	}
+	
+	/**
+	 * Ajoute le texte sur le bouton correspondant
+	 */
+	private void addText(String text) {
+		Mat textImage = new Text(webcam, 0, 0, width, height, " "+text+" ").getImage();
+		if (textImage != null) {
+			Mat img = new Mat();
+			opencv_imgproc.resize(textImage, img, new Size(image.cols(), image.rows()));
+			Mat alpha = new Mat(img.size(), CV_8UC1);
+			extractChannel(img, alpha, 3);
+			img.copyTo(image, alpha);
+		}
+	}
+}

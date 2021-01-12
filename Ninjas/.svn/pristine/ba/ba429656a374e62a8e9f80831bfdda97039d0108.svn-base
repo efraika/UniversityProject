@@ -1,0 +1,54 @@
+package projet;
+
+import static org.bytedeco.javacpp.opencv_imgcodecs.imread;
+import static org.bytedeco.javacpp.opencv_core.CV_8UC1;
+import static org.bytedeco.javacpp.opencv_core.extractChannel;
+import static org.bytedeco.javacpp.opencv_imgcodecs.IMREAD_UNCHANGED;
+import org.bytedeco.javacpp.opencv_core.Mat;
+import org.bytedeco.javacpp.opencv_core.Rect;
+import org.bytedeco.javacpp.opencv_imgproc;
+import org.bytedeco.javacpp.opencv_core.Size;
+
+
+public class ScoreTab extends Showable {
+	private Mat image;
+	private int coin;
+	private Mat[] count;
+	private int score;
+	
+	public ScoreTab(Webcam w) {
+		super(w);
+		//image = imread("Images/cadre.png", IMREAD_UNCHANGED);
+		image = imread("Images/cadretest.png", IMREAD_UNCHANGED);
+		setSize(getImage().cols() * w.height / 720, getImage().rows() * w.height / 720);
+		setLocation(w.width/5, 30 * w.height / 720);
+	
+		count = new Mat[3];
+	}
+
+	
+	public Mat getImage() {
+		Mat copy = image.clone();
+
+		Mat digitu = imread("Images/number" + String.valueOf(score % 10) + ".png", IMREAD_UNCHANGED);
+		opencv_imgproc.resize(digitu, digitu, new Size(image.rows() / 10, image.cols() / 10));
+		
+		//Mat digitd = imread("Images/number" + String.valueOf(score / 10) + ".png", IMREAD_UNCHANGED);
+		Mat alphau = new Mat(digitu.size(), CV_8UC1);
+		extractChannel(digitu, alphau, 3);
+		digitu.copyTo(copy.apply(new Rect(200 * webcam.width / 1024, 150 * webcam.height / 640 , digitu.cols(), digitu.rows())), alphau);
+		
+		Mat digitd = imread("Images/number" + String.valueOf(score / 10) + ".png", IMREAD_UNCHANGED);
+		opencv_imgproc.resize(digitd, digitd, new Size(image.rows() / 10, image.cols() / 10));
+		
+		//Mat digitd = imread("Images/number" + String.valueOf(score / 10) + ".png", IMREAD_UNCHANGED);
+		Mat alphad = new Mat(digitd.size(), CV_8UC1);
+		extractChannel(digitd, alphad, 3);
+		digitd.copyTo(copy.apply(new Rect(140 * webcam.width / 1024, 150 * webcam.height / 640, digitd.cols(), digitd.rows())), alphad);
+		return copy;
+	}
+
+	public void setScore(int n) {
+		score = n;
+	}
+}

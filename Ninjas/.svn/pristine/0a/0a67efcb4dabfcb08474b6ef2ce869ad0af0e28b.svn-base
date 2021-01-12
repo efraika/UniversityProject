@@ -1,0 +1,26 @@
+package projet;
+
+import static org.bytedeco.javacpp.opencv_imgcodecs.IMREAD_UNCHANGED;
+import static org.bytedeco.javacpp.opencv_imgcodecs.imread;
+
+import java.util.ListResourceBundle;
+
+public abstract class ButtonImagesBundle extends ListResourceBundle {
+	private Object[][] contents = {
+			{ "back_to_menu", null },
+			{ "credits", null },
+			{ "menu", null },
+			{ "options", null },
+			{ "play", null },
+			{ "play_again", null },
+			{ "quit", null },
+	};
+	
+	public Object[][] getContents() {
+		for (int i = 0; i < contents.length; i++) {
+			if (contents[i][1] == null)
+				contents[i][1] = imread("Images/Buttons/" + getLocale().getLanguage() + "/" + contents[i][0] + ".png", IMREAD_UNCHANGED);
+		}
+		return contents;
+	}
+}

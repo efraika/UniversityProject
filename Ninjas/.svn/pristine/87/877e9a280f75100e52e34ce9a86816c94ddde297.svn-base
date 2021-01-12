@@ -1,0 +1,248 @@
+package projet;
+
+import java.io.FileInputStream;
+import java.util.Iterator;
+import java.util.Locale;
+import java.util.Random;
+import java.util.ResourceBundle;
+import java.awt.Rectangle;
+
+import org.bytedeco.javacpp.opencv_core.Mat;
+
+import sun.audio.AudioPlayer;
+import sun.audio.AudioStream;
+
+public class Controller {
+	private Webcam webcam;
+	private View window;
+	private Locale locale;
+	private ResourceBundle buttonImagesBundle, buttonTextsBundle;
+	
+	public Controller() {
+		webcam = new Webcam();
+		window = new View();
+		locale = Locale.getDefault();
+		if (! locale.getLanguage().equals("fr") && ! locale.getLanguage().equals("en"))
+			locale = Locale.FRENCH;
+		buttonImagesBundle = ResourceBundle.getBundle("projet.ButtonImagesBundle", locale);
+		buttonTextsBundle = ResourceBundle.getBundle("ButtonTextsBundle", locale);
+	}
+	
+	/**
+	 * Initialise la couleur detect�e sur la couleur pr�sente derri�re le rectangle noir s'affichant � l'�cran apr�s un temps d'attente.
+	 * Donne ensuite la possibilit� au joueur de rep�rer la couleur detect�e en transformant les �lements de cette couleur en rouge.
+	 * Lance le menu lorsque l'on int�ragit avec le bouton jouer.
+	 */
+	private void initialisation() {
+		Text texte = new Text(webcam, 0, 0, webcam.width, webcam.height/3*2, "Placez la couleur que vous souhaitez utiliser dans le rectangle rouge et votre tête derrière la forme de visage");
+		Menu menu = new Menu(webcam, 5, 5);
+		addToMenu(menu, 2, 2, "menu");		
+		long start=System.nanoTime();
+		while (System.nanoTime() - start < 5e9) {
+			webcam.read();
+			webcam.rectangleDetection();
+			webcam.add(new Shape(webcam));
+			webcam.add(texte);
+			window.showImage(webcam.getImage());
+			
+		}
+		webcam.read();
+		webcam.change();
+		webcam.detectColor(new Rectangle(webcam.width/2, webcam.height/2, webcam.width/8, webcam.height/16));
+		start=System.nanoTime();
+		while (System.nanoTime() - start < 3e9) {
+			webcam.read();
+			webcam.testCouleur();
+			window.showImage(webcam.getImage());
+		}while(! menu.isOver()) {
+			webcam.read();
+			menu.detect();
+			menu.addToWebcam();
+			webcam.testCouleur();
+			window.showImage(webcam.getImage());
+		}
+		menu();
+	}
+	
+	/**
+	 * Cr�e un menu avec : 
+	 * 				un bouton Jouer permettant d'acceder � inGame();
+	 * 				un bouton Param�tres permettant d'acceder � options();
+	 * 				un bouton Cr�dits permettant d'acc�der � credits();
+	 */
+	private void menu() {
+		Menu menu = new Menu(webcam, 5, 5);
+		Button jouer = addToMenu(menu, 1, 1, "play");
+		Button parameters = addToMenu(menu, 1, 3, "options");
+		Button credits = addToMenu(menu, 3, 1, "credits");
+		addToMenu(menu, 3, 3, "quit");
+		
+		while(! menu.isOver()) {
+			runMenu(menu);
+			window.showImage(webcam.getImage());
+		}
+		if (menu.pressedButton() == jouer) inGame();
+		else if (menu.pressedButton() == parameters) options();
+		else if (menu.pressedButton() == credits) credits();
+	}
+	
+	private Button addToMenu(Menu menu, int row, int col, String key) {
+		return menu.add(row, col, (Mat) buttonImagesBundle.getObject(key), buttonTextsBundle.getString(key));
+	}
+	
+	private void inGame() {
+		Background background = new Background(webcam);
+		Chest chest = new Chest(webcam);
+		EnergyBar energyBar = new EnergyBar(webcam);
+		Round round = new Round(1, webcam, chest);
+		Button pause = new Button(webcam, webcam.width/2, 0, webcam.height/15, webcam.height/15, Button.PAUSE, "err");
+		Button power = new Button(webcam, 8*webcam.width / 10, 7*webcam.height/10, webcam.width/8, webcam.height/10, Button.LIGHTNING, "err", 8);
+		Menu menu = new Menu(webcam, pause);
+		while(! chest.empty()) {
+			if(webcam.read()) {	
+				chest.setRayon(webcam, round.getRound() / 5);
+				webcam.add(background);
+				if (round.getListe().isEmpty()) {
+						round.addNinjas(webcam,chest);
+						round.nextRound();
+				}
+				
+				for (Iterator<Ninja> iterator = round.getListe().iterator(); iterator.hasNext();) {
+					Ninja ninja = iterator.next();
+					if (ninja.isOut() && (ninja.isDead() || ninja.hasCoin()))
+						iterator.remove();
+					else {
+						if (! ninja.isDead() && ! ninja.hasCoin() && ninja.intersects(chest)) {
+							ninja.takeCoin();
+							chest.modifyCoins(-1);
+						}
+						if (! ninja.isOut()) {
+							if (! ninja.isDead() && ! ninja.hasCoin() && ninja.isTouched()) {
+							ninja.hit();
+							energyBar.increase();
+							}
+							webcam.add(ninja);
+						}
+						ninja.move(chest);
+					}
+				}
+				if(energyBar.isFull() && !energyBar.isUsed()) {
+					menu.add(power);
+					Utility.playSound("lightning.wav");
+					energyBar.use();
+				}
+				if(menu.isOver()) {
+					if(menu.pressedButton()==power) {
+						Utility.playSound("lightning.wav");
+						for (Ninja ninja : round.getListe()) {
+							if(!ninja.isOut()) 
+								ninja.hit();
+						}menu.remove(power);
+						menu.reset();
+						energyBar.reset();
+					}
+					else if(menu.pressedButton() == pause) pause();
+				}
+				webcam.add(round);
+				webcam.add(chest);
+				webcam.add(energyBar);
+				menu.detect();
+				menu.addToWebcam();
+				window.showImage(webcam.getImage());
+			}
+		}gameOver(round.getRound());
+    }
+		
+	private void pause() {
+		Menu menu = new Menu(webcam, 5, 7);
+		menu.add(2, 3, Button.PAUSE, "err");
+		while(!menu.isOver()) {
+			runMenu(menu);
+			window.showImage(webcam.getImage());
+		}
+	}
+	
+	private void credits() {
+		Menu menu = new Menu(webcam, 5, 5);
+		addToMenu(menu, 3, 2, "back_to_menu");
+		while (! menu.isOver()) {
+			runMenu(menu);
+			window.showImage(webcam.getImage());
+		}
+		menu();
+	}
+	
+	/**
+	 * Affiche le tableau des scores et propose au joueur de rejouer ou de retourner au menu
+	 */
+	private void gameOver(int round) {
+		Utility.playSound("game-over.wav");
+		ScoreTab scoretab = new ScoreTab(webcam);
+		Menu menu= new Menu(webcam, 7, 7);
+		Button rejouer = addToMenu(menu, 1, 1, "play_again");
+		Button retour = addToMenu(menu, 3, 1, "menu");
+		scoretab.setScore(round);
+		while (!menu.isOver()) {
+			webcam.read();
+			webcam.showFirstImage();
+			webcam.add(scoretab);
+			menu.detect();
+			menu.addToWebcam();
+	
+			window.showImage(webcam.getImage());
+		}
+		if (menu.pressedButton() == rejouer) inGame();
+		else if (menu.pressedButton() == retour) menu();
+	}
+	
+	/**
+	 * Cr�e un menu permettant au joueur de changer les param�tres du jeu
+	 */
+	private void options() {
+		Menu menu = new Menu(webcam, 5, 5);
+		Button changeColor = addToMenu(menu, 1, 2, "change_color");
+		Button retour = addToMenu(menu, 3, 2, "back_to_menu");
+		while (! menu.isOver()) {
+			runMenu(menu);
+			window.showImage(webcam.getImage());
+		}
+		if(menu.pressedButton()== retour) menu();
+		else if (menu.pressedButton()== changeColor)initialisation();
+	}
+	
+	/**
+	 * Runs the game.
+	 */
+	public void run() {
+		if (webcam.isOpened()) {
+			initialisation();
+			window.dispose();
+			webcam.release();
+			webcam.close();
+		}
+		else
+			System.out.println("Error: Webcam not opened");
+	}
+	
+	/**
+	 * Affiche en rouge � l'�cran la couleur d�tect�e par la webcam en appelant la m�thode webcam.testCouleur()
+	 */
+	public void testCouleur() {
+		while (webcam.read()) {
+			webcam.testCouleur();
+			window.showImage(webcam.getImage());
+		}
+	}
+	
+	/**
+	 * Ajoute le menu � l'�cran et d�tecte les interactions avec les boutons
+	 * @param menu
+	 */
+	private void runMenu(Menu menu) {
+		webcam.read();
+		menu.detect();
+		menu.addToWebcam();
+	}
+		
+	
+}

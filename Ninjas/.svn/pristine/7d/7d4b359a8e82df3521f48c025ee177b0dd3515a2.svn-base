@@ -1,0 +1,28 @@
+package projet;
+
+import java.io.FileInputStream;
+
+import sun.audio.AudioPlayer;
+import sun.audio.AudioStream;
+
+public final class Utility {
+
+	/**
+	 * Lance le son correspondant au String passe en argument et rattrape l'exception lancee si ce n'est pas possible.
+	 */
+	public static void playSound(String file) {
+		try {
+			AudioStream a = new AudioStream(new FileInputStream("Sounds/" + file));
+			AudioPlayer.player.start(a);
+//			AudioInputStream audioIn = AudioSystem.getAudioInputStream(new File("Sounds/" + file));
+//			Clip clip = AudioSystem.getClip();
+//			clip.open(audioIn);
+//			clip.start();	
+//			clip.close();
+		} catch(Exception e) {
+			System.err.println(e.getMessage());
+		}
+	}
+
+}
+	

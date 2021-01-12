@@ -1,0 +1,124 @@
+package projet;
+
+import static org.bytedeco.javacpp.opencv_imgcodecs.imread;
+import static org.bytedeco.javacpp.opencv_core.CV_8UC1;
+import static org.bytedeco.javacpp.opencv_core.extractChannel;
+import static org.bytedeco.javacpp.opencv_imgcodecs.IMREAD_UNCHANGED;
+import org.bytedeco.javacpp.opencv_core.Mat;
+import org.bytedeco.javacpp.opencv_core.Rect;
+
+/**
+ * A chest containing coins.
+ */
+public class Chest extends Showable {
+	private final Mat image;
+	private int coins;
+	private Mat[] digitImages;
+
+	//Devra être changé selon la difficulté
+	private int rayoncoffre;
+	private int centerx;
+	private int centery;
+	//Rapidité du déplacement du coffre
+	private int coeffdiff = 1;
+	
+	public Chest(Webcam w) {
+		super(w);
+		image = imread("Images/chest.png", IMREAD_UNCHANGED);
+		coins = 20;
+		digitImages = new Mat[10];
+		for (int i = 0; i < 10; i++)
+			digitImages[i] = imread("Images/number" + i + ".png", IMREAD_UNCHANGED);
+		
+		setSize(image.cols() * w.height / 720, image.rows() * w.height / 720);
+		setLocation((webcam.width - width) / 2, (webcam.height - height) - webcam.height/10);
+		rayoncoffre = 0;
+		centerx = this.x;
+		centery = this.y;
+	}	
+	
+	public Mat getImage() {
+		if(this.y == centery && this.x > this.centerx - rayoncoffre) {
+			this.x -= ((10* webcam.height / 720)*coeffdiff);
+		}else if(this.x == this.centerx - rayoncoffre &&  this.y > centery - rayoncoffre && rayoncoffre != 0) {
+			this.y -= ((10* webcam.height / 720)*coeffdiff);
+		}else if(this.y == centery - rayoncoffre && this.x < centerx + rayoncoffre) {
+			this.x += ((10* webcam.height / 720)*coeffdiff);
+		}else if(rayoncoffre != 0){
+			this.y += ((10* webcam.height / 720)*coeffdiff);
+		}
+		
+		Mat copy = image.clone();
+		for(int i = 0; i < 3; i++) {
+			//the i-th digit of "coins" counting from the right
+			Mat digit = digitImages[coins / (int)Math.pow(10, i) % 10];
+			Mat alpha = new Mat(digit.size(), CV_8UC1);
+			extractChannel(digit, alpha, 3);
+			digit.copyTo(copy.apply(new Rect(70-i*25, 90, digit.cols(), digit.rows())), alpha);
+		}
+		return copy;
+	}
+	
+	/**
+	 * Modifies the number of coins in the chest.
+	 * @param n - number of coins to add to the chest (can be negative).
+	 */
+	public void modifyCoins(int n) {
+		coins += n;
+		if (coins < 0)
+			coins = 0;
+	}
+	
+	/**
+	 * Returns whether the chest is empty.
+	 * @return true if the number of coins in the chest is equal to zero; false otherwise.
+	 */
+	public boolean empty() {
+		return coins == 0;
+	}
+	
+	
+	// A REDUIRE
+	public void setRayon(Webcam w, int diff) {
+		//Le reste de la division euclidienne du rayon du coffre par 10 doit être égal à 0
+		//rayoncoffre = ((w.width / 7) * diff) - ((w.width / 7) * diff)%10;
+		if(diff < 3) {
+			rayoncoffre = ((w.width / 7) * diff) - ((w.width / 7) * diff)%20;
+		}else if(diff == 3){
+			coeffdiff = 2;
+			rayoncoffre = 0;
+			this.x = centerx;
+			this.y = centery;
+		}else if(diff < 6){
+			System.out.println("DIFF"  + diff);
+			rayoncoffre = ((w.width / 7) * (diff-3)) - ((w.width / 7) * (diff-3))%20;
+			System.out.println("Rayon coffre "  + rayoncoffre);
+		}else if(diff==6) {
+			coeffdiff = 3;
+			rayoncoffre = 0;
+			this.x = centerx;
+			this.y = centery;
+		}else {
+			System.out.println("DIFF"  + diff);
+			rayoncoffre = ((w.width / 7) * (diff-6)) - ((w.width / 7) * (diff-6))%20;
+			System.out.println("Rayon coffre "  + rayoncoffre);
+		}
+	}
+	
+	/**
+	 * test if the player is cheating
+	 * @return true if is cheating
+	 */
+	public boolean isCheating() {
+		int pixels = 0;
+		for (int col = 0; col < width; col++) {
+			for (int row = 0; row < height; row++) {
+				if (webcam.isCouleur(y + row, x + col)) {
+					pixels++;
+					if (pixels > width*height/2) return true;
+				}
+			}
+		}return false;
+	}
+	
+}

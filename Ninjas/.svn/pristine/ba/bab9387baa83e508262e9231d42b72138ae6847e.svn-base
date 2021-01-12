@@ -1,0 +1,191 @@
+package projet;
+
+import static org.bytedeco.javacpp.opencv_core.flip;
+import static org.bytedeco.javacpp.opencv_core.CV_8UC1;
+import static org.bytedeco.javacpp.opencv_core.CV_8UC3;
+import static org.bytedeco.javacpp.opencv_core.mixChannels;
+import static org.bytedeco.javacpp.opencv_core.extractChannel;
+import static org.bytedeco.javacpp.opencv_imgproc.CV_AA;
+import static org.bytedeco.javacpp.opencv_imgproc.rectangle;
+import static org.bytedeco.javacpp.opencv_imgproc.resize;
+
+import org.bytedeco.javacpp.indexer.UByteRawIndexer;
+import org.bytedeco.javacpp.opencv_core.Mat;
+import org.bytedeco.javacpp.opencv_videoio.VideoCapture;
+import org.bytedeco.javacpp.opencv_core.Rect;
+import org.bytedeco.javacpp.opencv_core.Scalar;
+import java.awt.Rectangle;
+
+public class Webcam {
+	public final int width, height;
+	
+	private Mat image;
+	private UByteRawIndexer sI;
+	private VideoCapture webcam;
+	private int[] color;
+	private Mat imageSave;
+	private HeadSave hs;
+	
+	public void change() {
+		Mat m = image.clone();
+		hs = new HeadSave(this,m);
+	}
+
+	public void showFirstImage() {
+		if(hs!=null) {
+		this.add(hs);
+		}
+	}
+	
+	public Webcam() {
+		webcam = new VideoCapture(0);
+		image = new Mat();
+		webcam.read(image);
+		width = image.cols() / 16 * 16;
+		height = width / 16 * 9;		
+		color = new int[3];
+		image = new Mat();
+	}
+	
+	/**
+	 * Renvoie l'image de la webcam sous forme de matrice
+	 **/
+	public Mat getImage() {
+		return image;
+	}
+	
+	/**
+	 * 
+	 * @return
+	 */
+	public boolean read() {
+		if (! webcam.read(image))
+			return false;
+		flip(image, image, 1);
+		image = image.apply(new Rect(0, 0, width, height));
+		sI = image.clone().createIndexer();
+		//showFirstImage();
+		return true;
+	}
+	
+	/**
+	 * Renvoie vrai si le pixel est vert.
+	 * @param row rang du pixel	
+	 * @param col colonne du pixel
+	 */
+	public boolean isGreen(int row, int col) {
+		int r = sI.get(row, col, 2), g = sI.get(row, col, 1), b = sI.get(row, col, 0);
+    	//return g - r > 40 && g - b > 40;
+    	//Vert plus tolérant
+		//return (g>95) && (r<85) && (b < 85);
+		return (g>170) && (r<190) && (b < 120);
+	}
+	
+	/**
+	 * Ajoute l'image correspondant � l'�l�ment s sur l'image de la webcam
+	 */
+	public void add(Showable s) {
+		Mat sImage = s.getImage();
+		if (sImage != null) {
+			Rect rect = new Rect(s.x, s.y, s.width, s.height);
+			Mat img = new Mat();
+			resize(sImage, img, rect.size());
+			if (img.channels() == 3)
+				img.copyTo(image.apply(rect));
+			else {
+				Mat bgr = new Mat(img.rows(), img.cols(), CV_8UC3);
+				Mat alpha = new Mat(img.rows(), img.cols(), CV_8UC1);
+				int[] from_to = {0, 0, 1, 1, 2, 2};
+				mixChannels(img, 1, bgr, 1, from_to, 3);
+				extractChannel(img, alpha, 3);
+				bgr.copyTo(image.apply(rect), alpha);
+			}
+		}
+	}
+	
+	/**
+	 * Dessine le rectangle transparent sur l'�cran.
+	 **/
+	// Il faudrait le placer ici plutot
+//	public void rectangleDetection() {
+//		rectangle(image, new Rect(width/2, height - height / 3, width/8, height/16), Scalar.RED, 3, CV_AA, 0);
+//	}
+	
+	public void rectangleDetection(Rectangle r) {
+		rectangle(image, new Rect(r.x, r.y, r.width, r.height), Scalar.RED, 3, CV_AA, 0);
+	}
+	/**
+	 * Remplace les pixels de la couleur stock�e dans webcam par du rouge
+	 */
+	public void testColor() {
+		UByteRawIndexer indexer = image.createIndexer();
+		for (int r = 0; r < height; r++)
+			for (int c = 0; c < width; c++)
+				if (isCouleur(r, c))
+					for (int i = 0; i < 3; i++)
+						indexer.put(r, c, i, (i == 2) ? 255 : 0);	
+	}
+	
+	/**
+	 * D�tecte la couleur du rectangle pass� en argument, et met � jour les entiers r,g,b de la classe Webcam
+	 **/
+	public void detectColor(Rectangle rect) {
+		for (int col = rect.x; col < rect.x + rect.width; col++) {
+			for(int row = rect.y; row < rect.y + rect.height; row++) {
+				int[] c = pixelColor(row, col);
+				for (int i = 0; i < 3; i++)
+					color[i] += c[i];
+			}
+		}
+		for (int i = 0; i < 3; i++)
+			color[i] /= (rect.width*rect.height);
+	}
+	
+	/**
+	 * Renvoie un tableau contenant les composants r,g,b, dans cet ordre, du pixel aux coordon�es x,y.
+	 * @param row La coordonn�e en y du pixel 
+	 * @param col La coordonn�e en x du pixel
+	 */
+	private int[] pixelColor(int row, int col) {
+		int[] rgb = new int[3];
+		for (int i = 0; i < 3; i++)
+			rgb[i] = sI.get(row, col, 2 - i);
+		return rgb;
+	}
+	
+		
+	/**
+	 * Renvoie vrai si le pixel est de la couleur correspondant aux valeurs rgb de la classe Webcam
+	 * @param row 
+	 * @param col
+	 * @return
+	 */
+	public boolean isCouleur(int row, int col) {
+		int[] pixelColor = pixelColor(row, col);
+   		for (int i = 0; i < 3; i++)
+   			if (Math.abs(color[i] - pixelColor[i]) > 30)
+   				return false;
+   		return true;
+	}
+	
+	
+	public boolean isOpened() {
+		return webcam.isOpened();
+	}
+	
+	public void release() {
+		webcam.release();
+	}
+	
+	public void close() {
+		webcam.close();
+	}
+	
+	/**
+	 * V�rifie que le joueur ne triche pas en pla�ant une trop grande quantit� de la couleur d�tect�e sur l'�cran.
+	 * @return
+	 */
+	public boolean isCheating() {
+		return false;
+	}
+}

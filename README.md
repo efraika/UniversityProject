@@ -18,7 +18,7 @@ Diversi projetti realizatti come parte dei miei studi.
  * L1 : Lost for now
  
  * L2 : 
-    * [Jeu de l'oie]() - JAVA with [pgimalac](https://github.com/pgimalac)
+    * [Jeu de l'oie](https://github.com/efraika/UniversityProject/tree/main/Jeu%20de%20l'oie) - JAVA with [pgimalac](https://github.com/pgimalac)
     * [ProjetADS4](https://github.com/efraika/UniversityProject/tree/main/ProjetADS4) - JAVA with anonym
     * [Ninjas](https://github.com/efraika/UniversityProject/tree/main/ProjetADS4) - JAVA with Jimmy HO, Maxime VEMCLEFS et Loriane LECLERCQ
     * [Les frises de Coxeter](https://github.com/efraika/UniversityProject/tree/main/Les%20frises%20de%20Coxeter) - Maths study
